@@ -14,6 +14,7 @@ class FxCop
 		failOnError = attributes.fetch(:fail_on_error, true)
 		showSummary = attributes.fetch(:show_summary, false)
 		ignoreGeneratedCode = attributes.fetch(:ignore_generated_code, true)
+		libraryDirs = attributes.fetch(:library_dirs, [])
 		assemblies = attributes.fetch(:assemblies)
 		
 		return if assemblies.empty?
@@ -22,14 +23,14 @@ class FxCop
 		
 		fxcop = tool.to_absolute
 		
-		sh "#{fxcop.escape} #{"/project:#{project.escape}"} #{'/ignoregeneratedcode' if ignoreGeneratedCode} #{'/summary' if showSummary} #{"/out:#{report.escape}"} #{'/applyoutxsl' if applyReportXsl} #{"/outxsl:#{reportXsl.escape}" if applyReportXsl} #{'/console' if consoleOutput} #{"/consolexsl:#{consoleXsl.escape}" if consoleOutput} #{assemblies.map do |f| "/f:#{f.to_absolute.escape}" end } /successfile" \
+		sh "#{fxcop.escape} #{"/project:#{project.escape}"} #{'/ignoregeneratedcode' if ignoreGeneratedCode} #{'/summary' if showSummary} #{"/out:#{report.escape}"} #{'/applyoutxsl' if applyReportXsl} #{"/outxsl:#{reportXsl.escape}" if applyReportXsl} #{'/console' if consoleOutput} #{"/consolexsl:#{consoleXsl.escape}" if consoleOutput}  #{libraryDirs.map do |f| "/directory:#{f.to_absolute.escape}" end } #{assemblies.map do |f| "/f:#{f.to_absolute.escape}" end } /successfile" \
 		do |ok, status|
 			raise "FxCop could not be run" if not ok
 			
 			violations = 0
 			if not File.exist? '.lastcodeanalysissucceeded'.in(report.dirname)
 				# Re-run silently to generate an XML report to query later.
-				sh "#{fxcop.escape} /quiet #{"/project:#{project.escape}"} #{'/ignoregeneratedcode' if ignoreGeneratedCode} #{"/out:#{report.ext('xml').escape}"} #{assemblies.map do |f| "/f:#{f.to_absolute.escape}" end } /successfile" \
+				sh "#{fxcop.escape} /quiet #{"/project:#{project.escape}"} #{'/ignoregeneratedcode' if ignoreGeneratedCode} #{"/out:#{report.ext('xml').escape}"} #{libraryDirs.map do |f| "/directory:#{f.to_absolute.escape}" end } #{assemblies.map do |f| "/f:#{f.to_absolute.escape}" end } /successfile" \
 			
 				TeamCity.import_data 'FxCop', report.ext('xml')
 				
