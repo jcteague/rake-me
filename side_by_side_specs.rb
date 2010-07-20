@@ -30,6 +30,8 @@ end
 class SideBySideSpecs
 	attr_accessor :references, :projects, :specs
 	
+	XMLNS = "http://schemas.microsoft.com/developer/msbuild/2003"
+	
 	def initialize(params = {})
 		@references = params.fetch(:references)
 		@projects = params.fetch(:projects)
@@ -41,13 +43,13 @@ class SideBySideSpecs
 			project = Document.new(File.read(projectFile)) 
 			
 			@references.each do |ref|
-				xmlns = "http://schemas.microsoft.com/developer/msbuild/2003"
-				
 				query = "/x:Project/x:ItemGroup/x:Reference[@Include='#{ref}']"
-				project.elements.delete_all query, {"x" => xmlns}
-								
-				query = "/x:Project/x:ItemGroup/x:Compile[ends-with(lower-case(@Include), 'specs.cs')]"
-				project.elements.delete_all query, {"x" => xmlns}
+				project.elements.delete_all query, {"x" => XMLNS}
+			end
+			
+			@specs.each do |spec|
+				query = "/x:Project/x:ItemGroup/x:Compile[ends-with(lower-case(@Include), '#{spec.pathmap('%f').downcase}'})]"
+				project.elements.delete_all query, {"x" => XMLNS}
 			end
 			
 			file = File.new projectFile, "w+"
