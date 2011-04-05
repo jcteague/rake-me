@@ -20,16 +20,17 @@ class Minify
 	
 	def self.run(attributes)
 		tool = attributes.fetch(:tool)
-		source = attributes.fetch(:source)
-		destination = attributes.fetch(:destination)
+		out_file = attributes.fetch(:out_file)
+		files = attributes.fetch(:files)
 		opts = attributes.fetch(:opts, [])
 		
 		opts.push "-pretty:4" if attributes.fetch(:pretty, false)
 		
-		FileUtils.mkdir_p destination.dirname
+		FileUtils.mkdir_p out_file.dirname
+		files = files.sort_by { |file| file.pathmap('%X') }.reject{ |file| file == out_file}
 		
 		ajaxmin = tool.to_absolute
 
-		sh ajaxmin, "-clobber:true", "-enc:in", "UTF-8", "-enc:out", "UTF-8", "-term", "-out", destination, *(opts + source)
+		sh ajaxmin, "-clobber:true", "-enc:in", "UTF-8", "-enc:out", "UTF-8", "-term", "-out", out_file, *(opts + files)
 	end
 end
