@@ -38,10 +38,14 @@ class Hash
 	def recursive_merge(h)
 		self.merge!(h) do |key, _old, _new|
 			if _old.class == Hash
-				_old.recursive_merge(_new)
+				_old.deep_clone.recursive_merge(_new)
 			else
 				_new
 			end
 		end
+	end
+	
+	def deep_clone
+		Marshal::load(Marshal.dump(self))
 	end
 end
